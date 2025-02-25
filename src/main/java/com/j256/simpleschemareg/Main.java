@@ -11,64 +11,19 @@ import org.eclipse.jetty.server.ServerConnector;
  */
 public class Main {
 
+	private String host;
+	private String rootDir;
+	private int port;
+	private boolean handleShutdown;
+	private boolean verbose;
+
 	public static void main(String[] args) {
 		new Main().doMain(args);
 	}
 
 	private void doMain(String[] args) {
 
-		String host = null;
-		String rootDir = null;
-		int port = 0;
-		boolean handleShutdown = false;
-		boolean verbose = false;
-		for (int i = 0; i < args.length; i++) {
-			if ("-b".equals(args[i])) {
-				i++;
-				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -b", 1);
-				}
-				host = args[i];
-				continue;
-			}
-			if ("-h".equals(args[i]) || "--help".equals(args[i]) || "--usage".equals(args[i])) {
-				usageMessageThenExit(null, 0);
-			}
-			if ("-p".equals(args[i])) {
-				i++;
-				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -p", 1);
-				}
-				try {
-					port = Integer.parseInt(args[i]);
-				} catch (NumberFormatException nfe) {
-					usageMessageThenExit("Invalid number argument to -p: " + args[i], 1);
-				}
-				continue;
-			}
-			if ("-r".equals(args[i])) {
-				i++;
-				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -r", 1);
-				}
-				rootDir = args[i];
-				continue;
-			}
-			if ("-s".equals(args[i])) {
-				handleShutdown = true;
-				continue;
-			}
-			if ("-v".equals(args[i])) {
-				verbose = true;
-				continue;
-			}
-		}
-		if (port == 0) {
-			usageMessageThenExit("Port (-p) must be specified", 1);
-		}
-		if (rootDir == null) {
-			usageMessageThenExit("Root-directory (-r) must be specified", 1);
-		}
+		processArgs(args);
 
 		Server server = null;
 		ServerConnector connector = null;
@@ -92,11 +47,52 @@ public class Main {
 			handler.waitForShutdown();
 			server.stop();
 		} catch (Exception e) {
+			System.err.println("Problem starting or stopping webserver: " + e);
 			e.printStackTrace();
 		} finally {
 			if (connector != null) {
 				connector.close();
 			}
+		}
+	}
+
+	private void processArgs(String[] args) {
+		for (int i = 0; i < args.length; i++) {
+			if ("-b".equals(args[i])) {
+				i++;
+				if (i >= args.length) {
+					usageMessageThenExit("Missing argument to -b", 1);
+				}
+				host = args[i];
+			} else if ("-h".equals(args[i]) || "--help".equals(args[i]) || "--usage".equals(args[i])) {
+				usageMessageThenExit(null, 0);
+			} else if ("-p".equals(args[i])) {
+				i++;
+				if (i >= args.length) {
+					usageMessageThenExit("Missing argument to -p", 1);
+				}
+				try {
+					port = Integer.parseInt(args[i]);
+				} catch (NumberFormatException nfe) {
+					usageMessageThenExit("Invalid number argument to -p: " + args[i], 1);
+				}
+			} else if ("-r".equals(args[i])) {
+				i++;
+				if (i >= args.length) {
+					usageMessageThenExit("Missing argument to -r", 1);
+				}
+				rootDir = args[i];
+			} else if ("-s".equals(args[i])) {
+				handleShutdown = true;
+			} else if ("-v".equals(args[i])) {
+				verbose = true;
+			}
+		}
+		if (port == 0) {
+			usageMessageThenExit("Port (-p) must be specified", 1);
+		}
+		if (rootDir == null) {
+			usageMessageThenExit("Root-directory (-r) must be specified", 1);
 		}
 	}
 

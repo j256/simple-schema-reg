@@ -83,8 +83,8 @@ public interface SchemaPersister {
 		private final String schema;
 		private final byte[] digest;
 		private final long id;
-		// maybe not persisted but returned as part of the response
-		private transient long version;
+		// may not be persisted but returned as part of the response
+		private final transient long version;
 
 		public SchemaDetails(String schema, byte[] digest, long id) {
 			this.schema = schema;

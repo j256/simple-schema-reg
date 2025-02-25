@@ -20,7 +20,7 @@ import com.j256.simpleschemareg.SchemaPersister.SchemaDetails;
 import com.j256.simpleschemareg.entities.ErrorResponse;
 import com.j256.simpleschemareg.entities.IdResponse;
 import com.j256.simpleschemareg.entities.SchemaInfo;
-import com.j256.simpleschemareg.entities.SubjectVersionIdSchemaResponse;
+import com.j256.simpleschemareg.entities.SubjectVersionResponse;
 
 /**
  * Little Jetty handler to process the redirect after the jetty request is confirmed that records the generated
@@ -41,6 +41,8 @@ public class OurHandler extends AbstractHandler {
 	private static final Pattern POST_SUBJECT_CHECK_PATTERN = Pattern.compile("/subjects/([^/]+)");
 	private static final Pattern DELETE_SUBJECT_PATTERN = Pattern.compile("/subjects/([^/]+)");
 
+	private final Gson gson = new Gson();
+
 	private final SchemaPersister persister;
 	private final boolean handleShutdown;
 	private final boolean verbose;
@@ -59,7 +61,7 @@ public class OurHandler extends AbstractHandler {
 
 		HttpMethod method = HttpMethod.fromString(baseRequest.getMethod());
 		if (method == null) {
-			writeResponse(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400,
+			writeResponseObj(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400,
 					"unknown request method: " + baseRequest.getMethod()));
 			return;
 		}
@@ -71,7 +73,7 @@ public class OurHandler extends AbstractHandler {
 		} else if (method == HttpMethod.DELETE) {
 			handleDelete(target, baseRequest, request, response);
 		} else {
-			writeResponse(response,
+			writeResponseObj(response,
 					new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled request method: " + method));
 			return;
 		}
@@ -80,15 +82,17 @@ public class OurHandler extends AbstractHandler {
 	/**
 	 * Wait until the handler says we should shutdown.
 	 */
-	public void waitForShutdown() {
-		synchronized (this) {
-			while (!shuttingDown) {
-				try {
-					this.wait();
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					return;
-				}
+	public synchronized void waitForShutdown() {
+		if (verbose) {
+			printMessage("Waiting for shutdown");
+		}
+		while (!shuttingDown) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				System.err.println("Warning: waiting for shutdown was interruped");
+				return;
 			}
 		}
 	}
@@ -114,7 +118,7 @@ public class OurHandler extends AbstractHandler {
 			if (verbose) {
 				printMessage("Listing subjects: " + Arrays.toString(subjects));
 			}
-			writeResponse(response, subjects);
+			writeResponseObj(response, subjects);
 			return;
 		}
 
@@ -127,8 +131,8 @@ public class OurHandler extends AbstractHandler {
 
 			SchemaDetails details = persister.lookupSchemaId(schemaId);
 			if (details == null) {
-				writeResponse(response,
-						new ErrorResponse(HttpStatus.NOT_FOUND_404, "schema-id '" + schemaId + " not found"));
+				writeResponseObj(response,
+						new ErrorResponse(HttpStatus.NOT_FOUND_404, "schema-id " + schemaId + " not found"));
 				return;
 			}
 
@@ -136,7 +140,7 @@ public class OurHandler extends AbstractHandler {
 				printMessage("Looking up schmea-id '" + schemaId + " got id " + details.getId());
 			}
 
-			writeResponse(response, new SchemaInfo(details.getSchema()));
+			writeResponseObj(response, new SchemaInfo(details.getSchema()));
 			return;
 		}
 
@@ -149,8 +153,8 @@ public class OurHandler extends AbstractHandler {
 
 			SchemaDetails details = persister.lookupSchemaId(schemaId);
 			if (details == null) {
-				writeResponse(response,
-						new ErrorResponse(HttpStatus.NOT_FOUND_404, "schema-id '" + schemaId + " not found"));
+				writeResponseObj(response,
+						new ErrorResponse(HttpStatus.NOT_FOUND_404, "schema-id " + schemaId + " not found"));
 				return;
 			}
 
@@ -158,7 +162,7 @@ public class OurHandler extends AbstractHandler {
 				printMessage("Looking up schmea-id '" + schemaId + " got id " + details.getId());
 			}
 
-			writeResponse(response, details.getSchema());
+			writeResponseStr(response, details.getSchema());
 			return;
 		}
 
@@ -172,7 +176,7 @@ public class OurHandler extends AbstractHandler {
 
 			SchemaDetails details = persister.lookupSubjectVersion(subject, version);
 			if (details == null) {
-				writeResponse(response, new ErrorResponse(HttpStatus.NOT_FOUND_404,
+				writeResponseObj(response, new ErrorResponse(HttpStatus.NOT_FOUND_404,
 						"subject '" + subject + "' and version " + version + " not found"));
 				return;
 			}
@@ -181,8 +185,8 @@ public class OurHandler extends AbstractHandler {
 				printMessage("Looking up subject '" + subject + "' version " + version + " got id " + details.getId());
 			}
 
-			writeResponse(response,
-					new SubjectVersionIdSchemaResponse(subject, version, details.getId(), details.getSchema()));
+			writeResponseObj(response,
+					new SubjectVersionResponse(subject, version, details.getId(), details.getSchema()));
 			return;
 		}
 
@@ -192,7 +196,7 @@ public class OurHandler extends AbstractHandler {
 
 			long[] versions = persister.lookupSubjectVersions(subject);
 			if (versions == null) {
-				writeResponse(response,
+				writeResponseObj(response,
 						new ErrorResponse(HttpStatus.NOT_FOUND_404, "subject '" + subject + "' not found"));
 				return;
 			}
@@ -201,7 +205,7 @@ public class OurHandler extends AbstractHandler {
 				printMessage("Looking up subject '" + subject + "' versions: " + Arrays.toString(versions));
 			}
 
-			writeResponse(response, versions);
+			writeResponseObj(response, versions);
 			return;
 		}
 
@@ -215,7 +219,7 @@ public class OurHandler extends AbstractHandler {
 
 			SchemaDetails details = persister.lookupSubjectVersion(subject, version);
 			if (details == null) {
-				writeResponse(response, new ErrorResponse(HttpStatus.NOT_FOUND_404,
+				writeResponseObj(response, new ErrorResponse(HttpStatus.NOT_FOUND_404,
 						"subject '" + subject + "' and version " + version + " not found"));
 				return;
 			}
@@ -225,11 +229,11 @@ public class OurHandler extends AbstractHandler {
 						+ details.getId());
 			}
 
-			writeResponse(response, details.getSchema());
+			writeResponseStr(response, details.getSchema());
 			return;
 		}
 
-		writeResponse(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled GET request: " + pathInfo));
+		writeResponseObj(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled GET request: " + pathInfo));
 	}
 
 	/**
@@ -244,7 +248,6 @@ public class OurHandler extends AbstractHandler {
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 
-			Gson gson = new Gson();
 			SchemaInfo saveSchema;
 			// read in the schema
 			try (BufferedReader reader = request.getReader();) {
@@ -252,17 +255,17 @@ public class OurHandler extends AbstractHandler {
 			}
 			SchemaDetails details = persister.saveSchema(subject, saveSchema.getSchema());
 			if (details == null) {
-				writeResponse(response, new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR_500,
+				writeResponseObj(response, new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR_500,
 						" saving subject '" + subject + "' failed"));
 				return;
 			}
 
 			if (verbose) {
-				printMessage("Saved schema for subject '" + subject + "' got version " + details.getVersion()
-						+ ", id " + details.getId());
+				printMessage("Saved schema for subject '" + subject + "' got version " + details.getVersion() + ", id "
+						+ details.getId());
 			}
 
-			writeResponse(response, new IdResponse(details.getId()));
+			writeResponseObj(response, new IdResponse(details.getId()));
 			return;
 		}
 
@@ -270,7 +273,6 @@ public class OurHandler extends AbstractHandler {
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 
-			Gson gson = new Gson();
 			SchemaInfo saveSchema;
 			// read in the schema
 			try (BufferedReader reader = request.getReader();) {
@@ -278,8 +280,8 @@ public class OurHandler extends AbstractHandler {
 			}
 			SchemaDetails details = persister.lookupSchema(subject, saveSchema.getSchema());
 			if (details == null) {
-				writeResponse(response,
-						new ErrorResponse(HttpStatus.NOT_FOUND_404, "subject '" + subject + "' schema not found"));
+				writeResponseObj(response,
+						new ErrorResponse(HttpStatus.NOT_FOUND_404, "subject '" + subject + "' check not found"));
 				return;
 			}
 
@@ -288,11 +290,12 @@ public class OurHandler extends AbstractHandler {
 						+ ", id " + details.getId());
 			}
 
-			writeResponse(response, new IdResponse(details.getId()));
+			writeResponseObj(response, new IdResponse(details.getId()));
 			return;
 		}
 
-		writeResponse(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled POST request: " + pathInfo));
+		writeResponseObj(response,
+				new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled POST request: " + pathInfo));
 	}
 
 	/**
@@ -309,11 +312,12 @@ public class OurHandler extends AbstractHandler {
 			if (verbose) {
 				printMessage("Deleting subject '" + subject + "' got versions: " + Arrays.toString(versions));
 			}
-			writeResponse(response, versions);
+			writeResponseObj(response, versions);
 			return;
 		}
 
-		writeResponse(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled DELETE request: " + pathInfo));
+		writeResponseObj(response,
+				new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled DELETE request: " + pathInfo));
 	}
 
 	/**
@@ -325,23 +329,23 @@ public class OurHandler extends AbstractHandler {
 		try {
 			return Long.parseLong(str);
 		} catch (NumberFormatException nfe) {
-			writeResponse(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400, "bad request " + label + ": " + str));
+			writeResponseObj(response,
+					new ErrorResponse(HttpStatus.BAD_REQUEST_400, "bad request " + label + " number: " + str));
 			return -1;
 		}
 	}
 
-	private void writeResponse(HttpServletResponse response, String str) throws IOException {
+	private void writeResponseStr(HttpServletResponse response, String str) throws IOException {
 		try (Writer writer = response.getWriter();) {
 			writer.append(str);
 		}
 	}
 
-	private void writeResponse(HttpServletResponse response, Object obj) throws IOException {
+	private void writeResponseObj(HttpServletResponse response, Object obj) throws IOException {
 		if (verbose && obj instanceof ErrorResponse) {
 			printMessage("Writing error response: " + obj);
 		}
 		try (Writer writer = response.getWriter();) {
-			Gson gson = new Gson();
 			gson.toJson(obj, writer);
 		}
 	}

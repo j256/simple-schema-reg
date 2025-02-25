@@ -33,6 +33,8 @@ public class FileSchemaPersister implements SchemaPersister {
 	private final Map<Long, SchemaDetails> schemaIdMap = new ConcurrentHashMap<>();
 	private final AtomicLong maxId = new AtomicLong();
 
+	private final Gson gson = new Gson();
+
 	private final File rootDir;
 	private final File subjectsDir;
 	private final File idsDir;
@@ -47,7 +49,6 @@ public class FileSchemaPersister implements SchemaPersister {
 
 	@Override
 	public void initialize() throws IOException {
-		Gson gson = new Gson();
 		for (File file : idsDir.listFiles()) {
 			if (file.isDirectory() || file.getName().startsWith(".")) {
 				// skip any files or dot directories
@@ -63,7 +64,7 @@ public class FileSchemaPersister implements SchemaPersister {
 			try (FileReader reader = new FileReader(file);) {
 				SchemaDetails details = gson.fromJson(reader, SchemaDetails.class);
 				if (details.getId() != id) {
-					System.err.println("id file " + file + " contains wrong id " + details.getId());
+					System.err.println("WARNING: id file " + file + " contains wrong id " + details.getId());
 					continue;
 				}
 				digestSchemaMap.put(new DigestInfo(details.getDigest()), details);
@@ -115,7 +116,6 @@ public class FileSchemaPersister implements SchemaPersister {
 
 			idFile = new File(idsDir, Long.toString(id));
 			try (Writer writer = new FileWriter(idFile);) {
-				Gson gson = new Gson();
 				gson.toJson(details, writer);
 			}
 
@@ -175,7 +175,6 @@ public class FileSchemaPersister implements SchemaPersister {
 		Path idPath = Files.readSymbolicLink(subjectFile.toPath());
 
 		try (FileReader reader = new FileReader(new File(idsDir, idPath.toString()));) {
-			Gson gson = new Gson();
 			SchemaDetails details = gson.fromJson(reader, SchemaDetails.class);
 			return details;
 		} catch (FileNotFoundException fnfe) {
