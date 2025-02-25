@@ -40,3 +40,4 @@ Simple-Schema-Reg has a direct dependency on Jetty for its web-server and Gson f
 # ChangeLog Release Notes
 
 See the [![ChangeLog](https://img.shields.io/github/v/release/j256/simple-schema-reg?label=changelog)](https://github.com/j256/simple-schema-reg/blob/master/src/main/javadoc/doc-files/changelog.txt)
+
