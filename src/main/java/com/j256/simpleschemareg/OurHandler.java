@@ -105,11 +105,12 @@ public class OurHandler extends AbstractHandler {
 			if (verbose) {
 				printMessage("Shutting down");
 			}
+			// need to write the response before the shutdown is notified
+			writeResponseObj(response, new ErrorResponse(HttpStatus.OK_200, "shutting down"));
 			synchronized (this) {
 				shuttingDown = true;
 				this.notify();
 			}
-			response.getWriter().close();
 			return;
 		}
 

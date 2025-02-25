@@ -90,48 +90,53 @@ public class Main {
 	}
 
 	private void processArgs(String[] args) {
-		for (int i = 0; i < args.length; i++) {
-			if ("-b".equals(args[i])) {
-				i++;
+		for (int i = 0; i < args.length;) {
+			String arg = args[i];
+			i++;
+			if ("-b".equals(arg)) {
 				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -b", 1);
+					usageMessageThenExit("Missing argument to " + arg, 1);
 				}
-				bindHost = args[i];
-			} else if ("-h".equals(args[i]) || "--help".equals(args[i]) || "--usage".equals(args[i])) {
+				bindHost = args[i++];
+			} else if ("-h".equals(arg) || "--help".equals(arg) || "--usage".equals(arg)) {
 				usageMessageThenExit(null, 0);
-			} else if ("-p".equals(args[i])) {
-				i++;
+			} else if ("-p".equals(arg)) {
 				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -p", 1);
+					usageMessageThenExit("Missing argument to " + arg, 1);
 				}
+				String portStr = args[i++];
 				try {
-					httpPort = Integer.parseInt(args[i]);
+					httpPort = Integer.parseInt(portStr);
 				} catch (NumberFormatException nfe) {
-					usageMessageThenExit("Invalid number argument to -p: " + args[i], 1);
+					usageMessageThenExit("Invalid number argument to " + arg + ": " + portStr, 1);
 				}
-			} else if ("-P".equals(args[i])) {
-				i++;
+			} else if ("-P".equals(arg)) {
 				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -P", 1);
+					usageMessageThenExit("Missing argument to " + arg, 1);
 				}
+				String portStr = args[i++];
 				try {
-					sslPort = Integer.parseInt(args[i]);
+					sslPort = Integer.parseInt(portStr);
 				} catch (NumberFormatException nfe) {
-					usageMessageThenExit("Invalid number argument to -P: " + args[i], 1);
+					usageMessageThenExit("Invalid number argument to " + arg + ": " + portStr, 1);
 				}
-			} else if ("-r".equals(args[i])) {
-				i++;
+			} else if ("-r".equals(arg)) {
 				if (i >= args.length) {
-					usageMessageThenExit("Missing argument to -r", 1);
+					usageMessageThenExit("Missing argument to " + arg, 1);
 				}
-				rootDir = args[i];
-			} else if ("-s".equals(args[i])) {
+				rootDir = args[i++];
+			} else if ("-s".equals(arg)) {
 				handleShutdown = true;
-			} else if ("-v".equals(args[i])) {
+			} else if ("-v".equals(arg)) {
 				verbose = true;
 			}
 		}
+
+		if (httpPort == 0 && sslPort == 0) {
+			usageMessageThenExit("HTTP port (-p) or SSL port (-P) must be specified", 1);
+		}
 		if (sslPort != 0) {
+			// verify ssl port options
 			keyStorePath = System.getenv(SSL_KEYSTORE_LOCATION_ENV);
 			if (keyStorePath == null) {
 				usageMessageThenExit(
@@ -147,9 +152,6 @@ public class Main {
 				usageMessageThenExit("SSL port (-P) specified but key password env not set: " + SSL_KEY_PASSWORD_ENV,
 						1);
 			}
-		}
-		if (httpPort == 0 && sslPort == 0) {
-			usageMessageThenExit("HTTP port (-p) or SSL port (-P) must be specified", 1);
 		}
 		if (rootDir == null) {
 			usageMessageThenExit("Root-directory (-r) must be specified", 1);
