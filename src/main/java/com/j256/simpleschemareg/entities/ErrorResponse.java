@@ -3,7 +3,7 @@ package com.j256.simpleschemareg.entities;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Response with just an id.
+ * Response sent with http error-code and message..
  */
 public class ErrorResponse {
 

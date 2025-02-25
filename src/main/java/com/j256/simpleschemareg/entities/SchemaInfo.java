@@ -1,7 +1,7 @@
 package com.j256.simpleschemareg.entities;
 
 /**
- * Response with just an id.
+ * Payload and response with just the schema.
  */
 public class SchemaInfo {
 
