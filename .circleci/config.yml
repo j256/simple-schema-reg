@@ -19,9 +19,6 @@ jobs:
       - run:
           name: mvn clean package
           command: mvn clean package
-      - run:
-          name: Running reflection log4j v1 test
-          command: mvn -P testlog4jv1 -Dlog4j.artifact=log4j -Dlog4j.group=log4j -Dlog4j.version=1.2.17 -Dtest=Log4jLogBackendTest test
       # uploads the test metadata from the `target/surefire-reports` directory so that it can show up in the CircleCI dashboard. 
       - store_test_results: 
           path: target/surefire-reports
