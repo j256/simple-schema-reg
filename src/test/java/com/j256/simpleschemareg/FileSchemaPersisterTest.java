@@ -11,7 +11,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.j256.simpleschemareg.SchemaPersister.SchemaDetails;
+import com.j256.simpleschemareg.entities.SchemaDetails;
 
 public class FileSchemaPersisterTest {
 

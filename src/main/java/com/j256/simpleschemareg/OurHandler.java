@@ -16,9 +16,9 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.google.gson.Gson;
-import com.j256.simpleschemareg.SchemaPersister.SchemaDetails;
 import com.j256.simpleschemareg.entities.ErrorResponse;
 import com.j256.simpleschemareg.entities.IdResponse;
+import com.j256.simpleschemareg.entities.SchemaDetails;
 import com.j256.simpleschemareg.entities.SchemaInfo;
 import com.j256.simpleschemareg.entities.SubjectVersionResponse;
 

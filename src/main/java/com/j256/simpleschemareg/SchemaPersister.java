@@ -2,6 +2,8 @@ package com.j256.simpleschemareg;
 
 import java.io.IOException;
 
+import com.j256.simpleschemareg.entities.SchemaDetails;
+
 /**
  * Schema persistence operations.
  */
@@ -74,46 +76,4 @@ public interface SchemaPersister {
 	 * with another subject/version.
 	 */
 	public void deleteSubjectVersion(String subject, long version);
-
-	/**
-	 * Details about a schema that are stored.
-	 */
-	public static class SchemaDetails {
-
-		private final String schema;
-		private final byte[] digest;
-		private final long id;
-		// may not be persisted but returned as part of the response
-		private final transient long version;
-
-		public SchemaDetails(String schema, byte[] digest, long id) {
-			this.schema = schema;
-			this.digest = digest;
-			this.id = id;
-			this.version = 0;
-		}
-
-		public SchemaDetails(SchemaDetails details, long version) {
-			this.schema = details.schema;
-			this.digest = details.digest;
-			this.id = details.id;
-			this.version = version;
-		}
-
-		public String getSchema() {
-			return schema;
-		}
-
-		public byte[] getDigest() {
-			return digest;
-		}
-
-		public long getId() {
-			return id;
-		}
-
-		public long getVersion() {
-			return version;
-		}
-	}
 }

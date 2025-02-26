@@ -18,8 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.gson.Gson;
-import com.j256.simpleschemareg.SchemaPersister.SchemaDetails;
 import com.j256.simpleschemareg.entities.ErrorResponse;
+import com.j256.simpleschemareg.entities.SchemaDetails;
 import com.j256.simpleschemareg.entities.SchemaInfo;
 
 public class OurHandlerTest {

@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gson.Gson;
+import com.j256.simpleschemareg.entities.SchemaDetails;
 
 /**
  * Persists the schema to the file-system.
