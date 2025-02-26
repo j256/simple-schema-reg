@@ -59,10 +59,11 @@ public class OurHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 
-		HttpMethod method = HttpMethod.fromString(baseRequest.getMethod());
+		String methodStr = baseRequest.getMethod();
+		HttpMethod method = HttpMethod.fromString(methodStr);
 		if (method == null) {
-			writeResponseObj(response, new ErrorResponse(HttpStatus.BAD_REQUEST_400,
-					"unknown request method: " + baseRequest.getMethod()));
+			writeResponseObj(response,
+					new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unknown request method: " + methodStr));
 			return;
 		}
 
@@ -126,9 +127,6 @@ public class OurHandler extends AbstractHandler {
 		Matcher matcher = GET_SCHEMCA_ID.matcher(pathInfo);
 		if (matcher.matches()) {
 			long schemaId = convertLong(response, "schema-id", matcher.group(1));
-			if (schemaId < 0) {
-				return;
-			}
 
 			SchemaDetails details = persister.lookupSchemaId(schemaId);
 			if (details == null) {
@@ -148,9 +146,6 @@ public class OurHandler extends AbstractHandler {
 		matcher = GET_SCHEMCA_ID_SCHEMA.matcher(pathInfo);
 		if (matcher.matches()) {
 			long schemaId = convertLong(response, "schema-id", matcher.group(1));
-			if (schemaId < 0) {
-				return;
-			}
 
 			SchemaDetails details = persister.lookupSchemaId(schemaId);
 			if (details == null) {
@@ -171,9 +166,6 @@ public class OurHandler extends AbstractHandler {
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 			long version = convertLong(response, "version", matcher.group(2));
-			if (version < 0) {
-				return;
-			}
 
 			SchemaDetails details = persister.lookupSubjectVersion(subject, version);
 			if (details == null) {
@@ -214,9 +206,6 @@ public class OurHandler extends AbstractHandler {
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 			long version = convertLong(response, "version", matcher.group(2));
-			if (version < 0) {
-				return;
-			}
 
 			SchemaDetails details = persister.lookupSubjectVersion(subject, version);
 			if (details == null) {
