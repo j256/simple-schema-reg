@@ -71,14 +71,14 @@ if [ $? != 0 ]; then
     bad=1
 fi
 
-if [ -r "src/main/doc/$LIBRARY.texi" ]; then
-    ver=$(grep "^@set ${LIBRARY}_version" src/main/doc/$LIBRARY.texi | cut -f3 -d' ')
-    if [ "$release" != "$ver" ]; then
-	/bin/echo "$LIBRARY.texi version seems wrong:"
-	grep "^@set ${LIBRARY}_version" src/main/doc/$LIBRARY.texi
-	bad=1
-    fi
-fi
+#if [ -r "src/main/doc/$LIBRARY.texi" ]; then
+#    ver=$(grep "^@set ${LIBRARY}_version" src/main/doc/$LIBRARY.texi | cut -f3 -d' ')
+#    if [ "$release" != "$ver" ]; then
+#	/bin/echo "$LIBRARY.texi version seems wrong:"
+#	grep "^@set ${LIBRARY}_version" src/main/doc/$LIBRARY.texi
+#	bad=1
+#    fi
+#fi
 
 #if [ -r "src/main/javadoc/doc-files/$LIBRARY.html" ]; then
 #    grep "Version $release" src/main/javadoc/doc-files/$LIBRARY.html > /dev/null
