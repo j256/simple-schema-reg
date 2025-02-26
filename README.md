@@ -24,7 +24,7 @@ The jar gets deployed in its standard form as well as a `-shaded.jar` version wh
 The main class handles the following command line arguments:
 
 ```
-Usage: simple-schema-reg [-p port | -P port] -r dir [-b bind-host] [-s] [-v]
+Usage: java -jar simple-schema-reg.jar [-p port | -P port] [-b bind-host] [-r dir] [-s] [-v]
        -b bind-host  name of host to bind to, if not specified then all
        -p http-port  number of the http port to bind to
        -P ssl-port   number of the SSL port to bind to

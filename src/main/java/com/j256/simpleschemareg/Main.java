@@ -166,7 +166,8 @@ public class Main {
 		if (message != null) {
 			outputStream.println(message);
 		}
-		outputStream.println("Usage: simple-schema-reg [-p port | -P port] -r dir [-b bind-host] [-s] [-v] ");
+		outputStream.println(
+				"Usage: java -jar simple-schema-reg.jar [-p port | -P port] [-b bind-host] [-r dir] [-s] [-v] ");
 		outputStream.println("       -b bind-host  name of host to bind to, if not specified then all");
 		outputStream.println("       -p http-port  number of the http port to bind to");
 		outputStream.println("       -P ssl-port   number of the SSL port to bind to");
