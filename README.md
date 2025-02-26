@@ -54,3 +54,12 @@ Simple-Schema-Reg has a direct dependency on Jetty (9.4.56.v20240826 right now) 
 # ChangeLog Release Notes
 
 See the [![ChangeLog](https://img.shields.io/github/v/release/j256/simple-schema-reg?label=changelog)](https://github.com/j256/simple-schema-reg/blob/master/src/main/javadoc/doc-files/changelog.txt)
+
+### 0.2: 2/26/2025
+   * Moved SchemaDetails into it's own class.
+   * Some refactoring.
+   * Moved to deploying a normal jar and a shaded jar.
+   * Added the ability to add a prefix if running as part of a larger web service.
+
+### 0.1: 2/25/2025
+   * Initial somewhat working version.
