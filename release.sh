@@ -58,7 +58,7 @@ fi
 # check docs:
 
 cd $LOCAL_DIR
-ver=$(head -1 src/main/javadoc/doc-files/changelog.md | cut -f1 -d:)
+ver=$(head -1 src/main/javadoc/doc-files/changelog.md | cut -f2 -d' ' | cut -f1 -d:)
 if [ "$release" != "$ver" ]; then
     /bin/echo "Change log top line version seems wrong:"
     head -1 src/main/javadoc/doc-files/changelog.md
