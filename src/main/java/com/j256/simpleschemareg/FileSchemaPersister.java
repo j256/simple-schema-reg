@@ -29,10 +29,12 @@ public class FileSchemaPersister implements SchemaPersister {
 
 	private static final String IDS_SUBDIR_NAME = "id";
 	private static final String SUBJECTS_SUBDIR_NAME = "subject";
+	private static final String ID_LINK_PREFIX = "id_";
+	private static final int ID_LINK_PREFIX_LENGTH = ID_LINK_PREFIX.length();
 
 	private final Map<DigestInfo, SchemaDetails> digestSchemaMap = new ConcurrentHashMap<>();
 	private final Map<Long, SchemaDetails> schemaIdMap = new ConcurrentHashMap<>();
-	private final AtomicLong maxId = new AtomicLong();
+	private final AtomicLong maxSchemaId = new AtomicLong();
 
 	private final Gson gson = new Gson();
 
@@ -70,8 +72,8 @@ public class FileSchemaPersister implements SchemaPersister {
 				}
 				digestSchemaMap.put(new DigestInfo(details.getDigest()), details);
 				schemaIdMap.put(details.getId(), details);
-				if (id > maxId.get()) {
-					maxId.set(id);
+				if (id > maxSchemaId.get()) {
+					maxSchemaId.set(id);
 				}
 			}
 		}
@@ -112,7 +114,7 @@ public class FileSchemaPersister implements SchemaPersister {
 
 		if (details == null) {
 
-			long id = maxId.incrementAndGet();
+			long id = maxSchemaId.incrementAndGet();
 			details = new SchemaDetails(schema, digest, id);
 
 			idFile = new File(idsDir, Long.toString(id));
@@ -148,7 +150,7 @@ public class FileSchemaPersister implements SchemaPersister {
 		if (Files.exists(link)) {
 			Files.delete(link);
 		}
-		Files.createSymbolicLink(link, new File(Long.toString(details.getId())).toPath());
+		Files.createSymbolicLink(link, new File(generateSchemaIdFileName(details.getId())).toPath());
 		return new SchemaDetails(details, maxVersion);
 	}
 
@@ -174,12 +176,19 @@ public class FileSchemaPersister implements SchemaPersister {
 		}
 
 		Path idPath = Files.readSymbolicLink(subjectFile.toPath());
+		String idName = idPath.toString();
+		if (!idName.startsWith(ID_LINK_PREFIX)) {
+			return null;
+		}
+		// get our id-name by removing the prefix from the link
+		idName = idName.substring(ID_LINK_PREFIX_LENGTH);
 
-		try (FileReader reader = new FileReader(new File(idsDir, idPath.toString()));) {
+		// try reading in the id file
+		try (FileReader reader = new FileReader(new File(idsDir, idName));) {
 			SchemaDetails details = gson.fromJson(reader, SchemaDetails.class);
 			return details;
 		} catch (FileNotFoundException fnfe) {
-			// might as well remove it
+			// might as well remove it if the id file doesn't exist
 			subjectFile.delete();
 			return null;
 		}
@@ -262,7 +271,7 @@ public class FileSchemaPersister implements SchemaPersister {
 			return details;
 		}
 
-		File idFile = new File(Long.toString(details.getId()));
+		Path idFilePath = new File(generateSchemaIdFileName(details.getId())).toPath();
 
 		// find the version number in this subject
 		for (File file : subjectDir.listFiles()) {
@@ -278,11 +287,15 @@ public class FileSchemaPersister implements SchemaPersister {
 				continue;
 			}
 			Path idPath = Files.readSymbolicLink(path);
-			if (idPath.equals(idFile.toPath())) {
+			if (idPath.equals(idFilePath)) {
 				return new SchemaDetails(details, version);
 			}
 		}
 		return details;
+	}
+
+	private String generateSchemaIdFileName(long schemaId) {
+		return ID_LINK_PREFIX + Long.toString(schemaId);
 	}
 
 	/**

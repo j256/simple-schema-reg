@@ -9,7 +9,7 @@ Java Simple Schema Registry
 [![GitHub License](https://img.shields.io/github/license/j256/simple-schema-reg)](https://github.com/j256/simple-schema-reg/blob/master/LICENSE.txt)
 
 The goal of this library is to be a small schema registry.  I looked around for a couple of days and
-couldn't find one that made my quick startup requirements.
+couldn't find one that satisfied my quick startup requirements.
 
 * The source code be found on the [git repository](https://github.com/j256/simple-schema-reg)
 * Maven packages are published via [Maven Central](https://mvnrepository.com/artifact/com.j256.simple-schema-reg/simple-schema-reg/latest)
@@ -43,7 +43,7 @@ Maven packages are published via [![Maven Central](https://maven-badges.herokuap
 <dependency>
 	<groupId>com.j256.simple-schema-reg</groupId>
 	<artifactId>simple-schema-reg</artifactId>
-	<version>0.2</version>
+	<version>0.3</version>
 </dependency>
 ```
 
