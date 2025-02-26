@@ -1,4 +1,4 @@
-0.?: ?/??/2025
+0.2: 2/26/2025
 	* Moved SchemaDetails into it's own class.
 	* Some refactoring.
 	* Moved to deploying a normal jar and a shaded jar.
