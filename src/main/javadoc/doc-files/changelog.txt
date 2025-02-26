@@ -1,2 +1,8 @@
+0.?: ?/??/2025
+	* Moved SchemaDetails into it's own class.
+	* Some refactoring.
+	* Moved to deploying a normal jar and a shaded jar.
+	* Added the ability to add a prefix if running as part of a larger web service.
+
 0.1: 2/25/2025
 	* Initial somewhat working version.

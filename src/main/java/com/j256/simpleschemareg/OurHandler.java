@@ -23,8 +23,7 @@ import com.j256.simpleschemareg.entities.SchemaInfo;
 import com.j256.simpleschemareg.entities.SubjectVersionResponse;
 
 /**
- * Little Jetty handler to process the redirect after the jetty request is confirmed that records the generated
- * verification code.
+ * Jetty handler that services all of our schema persistence and lookup calls.
  */
 public class OurHandler extends AbstractHandler {
 
@@ -44,13 +43,21 @@ public class OurHandler extends AbstractHandler {
 	private final Gson gson = new Gson();
 
 	private final SchemaPersister persister;
+	private final String pathPrefix;
+	private final int pathPrefixLength;
 	private final boolean handleShutdown;
 	private final boolean verbose;
 
 	private volatile boolean shuttingDown;
 
-	public OurHandler(SchemaPersister persister, boolean handleShutdown, boolean verbose) {
+	public OurHandler(SchemaPersister persister, String pathPrefix, boolean handleShutdown, boolean verbose) {
 		this.persister = persister;
+		this.pathPrefix = pathPrefix;
+		if (pathPrefix == null) {
+			this.pathPrefixLength = 0;
+		} else {
+			this.pathPrefixLength = pathPrefix.length();
+		}
 		this.handleShutdown = handleShutdown;
 		this.verbose = verbose;
 	}
@@ -101,7 +108,10 @@ public class OurHandler extends AbstractHandler {
 	private void handleGet(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 
-		String pathInfo = request.getPathInfo();
+		String pathInfo = getPathInfo(request, response);
+		if (pathInfo == null) {
+			return;
+		}
 		if (handleShutdown && GET_SHUTDOWN.equals(pathInfo)) {
 			if (verbose) {
 				printMessage("Shutting down");
@@ -232,7 +242,10 @@ public class OurHandler extends AbstractHandler {
 	private void handlePost(String target, Request baseRequest, HttpServletRequest request,
 			HttpServletResponse response) throws IOException {
 
-		String pathInfo = request.getPathInfo();
+		String pathInfo = getPathInfo(request, response);
+		if (pathInfo == null) {
+			return;
+		}
 		// POST /subjects/(string: subject)/versions
 		Matcher matcher = POST_SUBJECT_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
@@ -293,7 +306,10 @@ public class OurHandler extends AbstractHandler {
 	 */
 	private void handleDelete(String target, Request baseRequest, HttpServletRequest request,
 			HttpServletResponse response) throws IOException {
-		String pathInfo = request.getPathInfo();
+		String pathInfo = getPathInfo(request, response);
+		if (pathInfo == null) {
+			return;
+		}
 		// POST /subjects/(string: subject)/versions
 		Matcher matcher = DELETE_SUBJECT_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
@@ -310,6 +326,18 @@ public class OurHandler extends AbstractHandler {
 				new ErrorResponse(HttpStatus.BAD_REQUEST_400, "unhandled DELETE request: " + pathInfo));
 	}
 
+	private String getPathInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String pathInfo = request.getPathInfo();
+		if (pathPrefix == null || pathPrefixLength == 0) {
+			return pathInfo;
+		}
+		if (pathInfo.length() < pathPrefixLength || !pathInfo.startsWith(pathPrefix)) {
+			writeResponseObj(response, new ErrorResponse(HttpStatus.NOT_FOUND_404, "unknown path: " + pathInfo));
+			return null;
+		}
+		return pathInfo.substring(pathPrefixLength);
+	}
+
 	/**
 	 * Convert and return a long argument.
 	 * 
@@ -319,6 +347,7 @@ public class OurHandler extends AbstractHandler {
 		try {
 			return Long.parseLong(str);
 		} catch (NumberFormatException nfe) {
+			// may not get here because of the regex \d+ but let's be careful out there
 			writeResponseObj(response,
 					new ErrorResponse(HttpStatus.BAD_REQUEST_400, "bad request " + label + " number: " + str));
 			return -1;

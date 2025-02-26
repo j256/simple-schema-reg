@@ -18,7 +18,7 @@ public class Main {
 	private static final String SSL_KEY_PASSWORD_ENV = "SSL_KEY_PASSWORD";
 
 	private String bindHost;
-	private String rootDir;
+	private String rootDir = ".";
 	private int httpPort;
 	private int sslPort;
 	private boolean handleShutdown;
@@ -44,7 +44,7 @@ public class Main {
 		try {
 			// start a web-server for callback purposes
 			server = new Server();
-			OurHandler ourHandler = new OurHandler(persister, handleShutdown, verbose);
+			OurHandler ourHandler = new OurHandler(persister, null, handleShutdown, verbose);
 			server.setHandler(ourHandler);
 
 			if (httpPort != 0) {
@@ -152,9 +152,6 @@ public class Main {
 				usageMessageThenExit("SSL port (-P) specified but key password env not set: " + SSL_KEY_PASSWORD_ENV,
 						1);
 			}
-		}
-		if (rootDir == null) {
-			usageMessageThenExit("Root-directory (-r) must be specified", 1);
 		}
 	}
 

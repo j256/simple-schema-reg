@@ -19,7 +19,21 @@ Enjoy.  Gray Watson
 
 # Getting Started
 
-...
+The jar gets deployed in its standard form as well as a `-shaded.jar` version which is suitable for running as `java -jar`  with the Main class in `com.j256.simpleschemareg.Main`.  This will create a Jetty http/https standalone webserver.  You can also call the handler directly.
+
+The main class handles the following command line arguments:
+
+```
+Usage: simple-schema-reg [-p port | -P port] -r dir [-b bind-host] [-s] [-v]
+       -b bind-host  name of host to bind to, if not specified then all
+       -p http-port  number of the http port to bind to
+       -P ssl-port   number of the SSL port to bind to
+       -r root-dir   root direcctory where the schema files are stored
+       -s            enable the /shutdown GET command
+       -v            verbose messages to stdout
+```
+
+Either one or both of `-p` and `-P` must be specified.  By default it will save things into the current directory unless `-r root-dir` is specified.
 
 # Maven Configuration
 
@@ -29,13 +43,13 @@ Maven packages are published via [![Maven Central](https://maven-badges.herokuap
 <dependency>
 	<groupId>com.j256.simple-schema-reg</groupId>
 	<artifactId>simple-schema-reg</artifactId>
-	<version>0.1</version>
+	<version>0.2</version>
 </dependency>
 ```
 
 # Dependencies
 
-Simple-Schema-Reg has a direct dependency on Jetty for its web-server and Gson for it's JSON processing.
+Simple-Schema-Reg has a direct dependency on Jetty (9.4.56.v20240826 right now) for its web-server and Gson (2.8.5) for it's JSON processing.
 
 # ChangeLog Release Notes
 

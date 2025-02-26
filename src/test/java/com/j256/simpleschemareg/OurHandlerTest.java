@@ -35,7 +35,7 @@ public class OurHandlerTest {
 	@Before
 	public void before() throws IOException {
 		persister = EasyMock.createMock(SchemaPersister.class);
-		handler = new OurHandler(persister, true, false);
+		handler = new OurHandler(persister, null, true, false);
 		baseRequest = EasyMock.createMock(Request.class);
 		request = EasyMock.createMock(Request.class);
 		response = EasyMock.createMock(Response.class);
@@ -275,7 +275,7 @@ public class OurHandlerTest {
 	@Test
 	public void testUnknownPost() throws IOException {
 		SchemaPersister persister = EasyMock.createMock(SchemaPersister.class);
-		OurHandler handler = new OurHandler(persister, true, false);
+		OurHandler handler = new OurHandler(persister, null, true, false);
 
 		expect(baseRequest.getMethod()).andReturn("POST");
 		expect(request.getPathInfo()).andReturn("/unknown");
@@ -291,7 +291,7 @@ public class OurHandlerTest {
 	@Test
 	public void testUnknownDelete() throws IOException {
 		SchemaPersister persister = EasyMock.createMock(SchemaPersister.class);
-		OurHandler handler = new OurHandler(persister, true, false);
+		OurHandler handler = new OurHandler(persister, null, true, false);
 
 		expect(baseRequest.getMethod()).andReturn("POST");
 		expect(request.getPathInfo()).andReturn("/unknown");
