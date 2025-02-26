@@ -18,10 +18,10 @@ if [ $? -ne 0 ]; then
     bad=1
 fi
 
-head -1 src/main/javadoc/doc-files/changelog.txt | fgrep '?' > /dev/null 2>&1
+head -1 src/main/javadoc/doc-files/changelog.md | fgrep '?' > /dev/null 2>&1
 if [ $? -ne 1 ]; then
     /bin/echo "No question-marks (?) can be in the ChangeLog top line."
-    head -1 src/main/javadoc/doc-files/changelog.txt
+    head -1 src/main/javadoc/doc-files/changelog.md
     bad=1
 fi
 
@@ -58,10 +58,10 @@ fi
 # check docs:
 
 cd $LOCAL_DIR
-ver=$(head -1 src/main/javadoc/doc-files/changelog.txt | cut -f1 -d:)
+ver=$(head -1 src/main/javadoc/doc-files/changelog.md | cut -f1 -d:)
 if [ "$release" != "$ver" ]; then
     /bin/echo "Change log top line version seems wrong:"
-    head -1 src/main/javadoc/doc-files/changelog.txt
+    head -1 src/main/javadoc/doc-files/changelog.md
     bad=1
 fi
 
