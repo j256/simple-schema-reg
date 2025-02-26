@@ -293,7 +293,8 @@ public class OurHandler extends AbstractHandler {
 						+ ", id " + details.getId());
 			}
 
-			writeResponseObj(response, new IdResponse(details.getId()));
+			writeResponseObj(response,
+					new SubjectVersionResponse(subject, details.getVersion(), details.getId(), details.getSchema()));
 			return;
 		}
 
