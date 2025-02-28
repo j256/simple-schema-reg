@@ -8,6 +8,10 @@
 
 name: Java CI with Maven
 
+env:
+  # Setting an environment variable with the value of a configuration variable
+  TEST_CHECK_PUBLISHER_SECRET: ${{ vars.TEST_CHECK_PUBLISHER_SECRET }}
+
 on:
   push:
     branches: [ "main" ]
