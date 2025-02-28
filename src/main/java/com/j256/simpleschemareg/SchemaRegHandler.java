@@ -25,20 +25,21 @@ import com.j256.simpleschemareg.entities.SubjectVersionResponse;
 /**
  * Jetty handler that services all of our schema persistence and lookup calls.
  */
-public class OurHandler extends AbstractHandler {
+public class SchemaRegHandler extends AbstractHandler {
 
 	// GET /subjects/(string: subject)/versions/(versionId: version)/schema
 	private static final String GET_SHUTDOWN = "/shutdown";
 	private static final String GET_SUBJECTS = "/subjects";
-	private static final Pattern GET_SCHEMCA_ID = Pattern.compile("/schemas/ids/(\\d+)");
-	private static final Pattern GET_SCHEMCA_ID_SCHEMA = Pattern.compile("/schemas/ids/(\\d+)/schema");
-	private static final Pattern GET_SUBJECT_VERSION = Pattern.compile("/subjects/([^/]+)/versions/(\\d+)");
-	private static final Pattern GET_SUBJECT_VERSIONS = Pattern.compile("/subjects/([^/]+)/versions");
-	private static final Pattern GET_SUBJECT_VERSION_SCHEMA =
+	private static final Pattern GET_SCHEMA_ID_PATTERN = Pattern.compile("/schemas/ids/(\\d+)");
+	private static final Pattern GET_SCHEMCA_ID_SCHEMA_PATTERN = Pattern.compile("/schemas/ids/(\\d+)/schema");
+	private static final Pattern GET_SUBJECT_VERSION_PATTERN = Pattern.compile("/subjects/([^/]+)/versions/(\\d+)");
+	private static final Pattern GET_SUBJECT_VERSIONS_PATTERN = Pattern.compile("/subjects/([^/]+)/versions");
+	private static final Pattern GET_SUBJECT_VERSION_SCHEMA_PATTERN =
 			Pattern.compile("/subjects/([^/]+)/versions/(\\d+)/schema");
 	private static final Pattern POST_SUBJECT_PATTERN = Pattern.compile("/subjects/([^/]+)/versions");
 	private static final Pattern POST_SUBJECT_CHECK_PATTERN = Pattern.compile("/subjects/([^/]+)");
 	private static final Pattern DELETE_SUBJECT_PATTERN = Pattern.compile("/subjects/([^/]+)");
+	private static final Pattern DELETE_SUBJECT_VERSION_PATTERN = Pattern.compile("/subjects/([^/]+)/versions/(\\d+)");
 
 	private final Gson gson = new Gson();
 
@@ -50,7 +51,7 @@ public class OurHandler extends AbstractHandler {
 
 	private volatile boolean shuttingDown;
 
-	public OurHandler(SchemaPersister persister, String pathPrefix, boolean handleShutdown, boolean verbose) {
+	public SchemaRegHandler(SchemaPersister persister, String pathPrefix, boolean handleShutdown, boolean verbose) {
 		this.persister = persister;
 		this.pathPrefix = pathPrefix;
 		if (pathPrefix == null) {
@@ -112,6 +113,8 @@ public class OurHandler extends AbstractHandler {
 		if (pathInfo == null) {
 			return;
 		}
+
+		// GET /shutdown
 		if (handleShutdown && GET_SHUTDOWN.equals(pathInfo)) {
 			if (verbose) {
 				printMessage("Shutting down");
@@ -125,6 +128,7 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
+		// GET /subjects
 		if (GET_SUBJECTS.equals(pathInfo)) {
 			String[] subjects = persister.lookupSubjects();
 			if (verbose) {
@@ -134,7 +138,8 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
-		Matcher matcher = GET_SCHEMCA_ID.matcher(pathInfo);
+		// GET /schemas/ids/(id: schema-id)
+		Matcher matcher = GET_SCHEMA_ID_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			long schemaId = convertLong(response, "schema-id", matcher.group(1));
 
@@ -153,7 +158,8 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
-		matcher = GET_SCHEMCA_ID_SCHEMA.matcher(pathInfo);
+		// GET /schemas/ids/(int: schema-id)/schema");
+		matcher = GET_SCHEMCA_ID_SCHEMA_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			long schemaId = convertLong(response, "schema-id", matcher.group(1));
 
@@ -172,7 +178,8 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
-		matcher = GET_SUBJECT_VERSION.matcher(pathInfo);
+		// GET /subjects/(string: subject)/versions/(int: version)
+		matcher = GET_SUBJECT_VERSION_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 			long version = convertLong(response, "version", matcher.group(2));
@@ -193,7 +200,8 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
-		matcher = GET_SUBJECT_VERSIONS.matcher(pathInfo);
+		// GET /subjects/(string: subject))/versions
+		matcher = GET_SUBJECT_VERSIONS_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 
@@ -212,7 +220,8 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
-		matcher = GET_SUBJECT_VERSION_SCHEMA.matcher(pathInfo);
+		// GET /subjects/(string: subject)/versions/(int: version)/schema
+		matcher = GET_SUBJECT_VERSION_SCHEMA_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 			long version = convertLong(response, "version", matcher.group(2));
@@ -246,6 +255,7 @@ public class OurHandler extends AbstractHandler {
 		if (pathInfo == null) {
 			return;
 		}
+
 		// POST /subjects/(string: subject)/versions
 		Matcher matcher = POST_SUBJECT_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
@@ -272,6 +282,7 @@ public class OurHandler extends AbstractHandler {
 			return;
 		}
 
+		// POST /subjects/(string: subject)
 		matcher = POST_SUBJECT_CHECK_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
@@ -311,7 +322,8 @@ public class OurHandler extends AbstractHandler {
 		if (pathInfo == null) {
 			return;
 		}
-		// POST /subjects/(string: subject)/versions
+
+		// DELETE /subjects/(string: subject)
 		Matcher matcher = DELETE_SUBJECT_PATTERN.matcher(pathInfo);
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
@@ -320,6 +332,20 @@ public class OurHandler extends AbstractHandler {
 				printMessage("Deleting subject '" + subject + "' got versions: " + Arrays.toString(versions));
 			}
 			writeResponseObj(response, versions);
+			return;
+		}
+
+		// DELETE /subjects/(string: subject)/versions/(int: version)
+		matcher = DELETE_SUBJECT_VERSION_PATTERN.matcher(pathInfo);
+		if (matcher.matches()) {
+			String subject = matcher.group(1);
+			long version = convertLong(response, "version", matcher.group(2));
+			if (verbose) {
+				printMessage("Deleting subject '" + subject + "' version " + version);
+			}
+			persister.deleteSubjectVersion(subject, version);
+			// response is just a version number strangely
+			writeResponseObj(response, version);
 			return;
 		}
 

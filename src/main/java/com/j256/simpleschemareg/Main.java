@@ -44,7 +44,7 @@ public class Main {
 		try {
 			// start a web-server for callback purposes
 			server = new Server();
-			OurHandler ourHandler = new OurHandler(persister, null, handleShutdown, verbose);
+			SchemaRegHandler ourHandler = new SchemaRegHandler(persister, null, handleShutdown, verbose);
 			server.setHandler(ourHandler);
 
 			if (httpPort != 0) {
