@@ -1,3 +1,6 @@
+### 0.4: ?/??/2025
+   * Added DELETE of subject/version.
+
 ### 0.3: 2/26/2025
    * Added missing JSON fields to response for check upload "/subjects/..." request.
    * Added an id_ prefix to the version symlinks so they don't create fake infinite link loops.

@@ -22,7 +22,7 @@ import com.j256.simpleschemareg.entities.ErrorResponse;
 import com.j256.simpleschemareg.entities.SchemaDetails;
 import com.j256.simpleschemareg.entities.SchemaInfo;
 
-public class OurHandlerTest {
+public class SchemaRegHandlerTest {
 
 	private final Gson gson = new Gson();
 	private SchemaPersister persister;
