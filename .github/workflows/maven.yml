@@ -28,4 +28,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn clean package
+    - name: Generate coverage report using jacoco
+      run: mvn jacoco:report
+    - name: Upload coverage report to CodeCov
+      run: bash <(curl -s https://codecov.io/bash)
+    - name: Test checks publishing to github
+      run: mvn -X test-check-publisher:publish
