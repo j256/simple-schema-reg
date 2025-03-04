@@ -68,9 +68,9 @@ public interface SchemaPersister {
 
 	/**
 	 * Delete the schema associated with a subject and version. This might leave the schema around if it is associated
-	 * with another subject/version.
+	 * with another subject/version. Set permanent to true to also delete the associated schema-id.
 	 */
-	public void deleteSubjectVersion(String subject, long version);
+	public SchemaDetails deleteSubjectVersion(String subject, long version, boolean permanent) throws IOException;
 
 	/**
 	 * Save schema to the registry. If it is new then it will be added to the various internal indexes. If it already

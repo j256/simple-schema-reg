@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gson.Gson;
 import com.j256.simpleschemareg.entities.SchemaDetails;
+import com.j256.simpleschemareg.entities.SubjectVersion;
 
 /**
  * Persists the schema to the file-system.
@@ -30,10 +31,12 @@ public class FileSchemaPersister implements SchemaPersister {
 	private static final String IDS_SUBDIR_NAME = "id";
 	private static final String SUBJECTS_SUBDIR_NAME = "subject";
 	private static final String ID_LINK_PREFIX = "id_";
+	private static final String ID_LINK_DELETE_SUFFIX = ".del";
 	private static final int ID_LINK_PREFIX_LENGTH = ID_LINK_PREFIX.length();
 
 	private final Map<DigestInfo, SchemaDetails> digestSchemaMap = new ConcurrentHashMap<>();
 	private final Map<Long, SchemaDetails> schemaIdMap = new ConcurrentHashMap<>();
+	private final Map<SubjectVersion, SchemaDetails> deletedMap = new ConcurrentHashMap<>();
 	private final AtomicLong maxSchemaId = new AtomicLong();
 
 	private final Gson gson = new Gson();
@@ -170,26 +173,10 @@ public class FileSchemaPersister implements SchemaPersister {
 	@Override
 	public SchemaDetails lookupSubjectVersion(String subject, long version) throws IOException {
 		File subjectDir = new File(subjectsDir, subject);
-		File subjectFile = new File(subjectDir, Long.toString(version));
-		if (!Files.isSymbolicLink(subjectFile.toPath())) {
-			return null;
-		}
-
-		Path idPath = Files.readSymbolicLink(subjectFile.toPath());
-		String idName = idPath.toString();
-		if (!idName.startsWith(ID_LINK_PREFIX)) {
-			return null;
-		}
-		// get our id-name by removing the prefix from the link
-		idName = idName.substring(ID_LINK_PREFIX_LENGTH);
-
-		// try reading in the id file
-		try (FileReader reader = new FileReader(new File(idsDir, idName));) {
-			SchemaDetails details = gson.fromJson(reader, SchemaDetails.class);
-			return details;
-		} catch (FileNotFoundException fnfe) {
-			// might as well remove it if the id file doesn't exist
-			subjectFile.delete();
+		File subjectVersionFile = new File(subjectDir, Long.toString(version));
+		if (Files.isSymbolicLink(subjectVersionFile.toPath())) {
+			return readIdLink(subjectVersionFile);
+		} else {
 			return null;
 		}
 	}
@@ -201,8 +188,13 @@ public class FileSchemaPersister implements SchemaPersister {
 
 	@Override
 	public void deleteSchemaId(long id) {
-		File idFile = new File(idsDir, Long.toString(id));
-		idFile.delete();
+		SchemaDetails details = lookupSchemaId(id);
+		if (details != null) {
+			File idFile = new File(idsDir, Long.toString(id));
+			idFile.delete();
+			schemaIdMap.remove(id);
+			digestSchemaMap.remove(new DigestInfo(details.getDigest()));
+		}
 	}
 
 	@Override
@@ -211,10 +203,41 @@ public class FileSchemaPersister implements SchemaPersister {
 	}
 
 	@Override
-	public void deleteSubjectVersion(String subject, long version) {
+	public SchemaDetails deleteSubjectVersion(String subject, long version, boolean permanent) throws IOException {
+
 		File subjectDir = new File(subjectsDir, subject);
-		File idFile = new File(subjectDir, Long.toString(version));
-		idFile.delete();
+		String versionStr = Long.toString(version);
+		File versionDeleteFile = new File(subjectDir, versionStr + ID_LINK_DELETE_SUFFIX);
+
+		SchemaDetails details = lookupSubjectVersion(subject, version);
+		if (details == null) {
+			// if it has already been deleted then see if it is in our delete-map
+			if (permanent) {
+				details = deletedMap.remove(new SubjectVersion(subject, version));
+				if (details == null) {
+					if (Files.isSymbolicLink(versionDeleteFile.toPath())) {
+						details = readIdLink(versionDeleteFile);
+						if (details != null) {
+							deleteSchemaId(details.getId());
+						}
+					}
+				} else {
+					deleteSchemaId(details.getId());
+				}
+				versionDeleteFile.delete();
+				subjectDir.delete();
+			}
+			if (details == null) {
+				return null;
+			} else {
+				return new SchemaDetails(details, version);
+			}
+		}
+
+		File versionFile = new File(subjectDir, versionStr);
+		versionFile.renameTo(versionDeleteFile);
+		deletedMap.put(new SubjectVersion(subject, version), details);
+		return new SchemaDetails(details, version);
 	}
 
 	private byte[] digestFromSchema(String schema) {
@@ -296,6 +319,26 @@ public class FileSchemaPersister implements SchemaPersister {
 
 	private String generateSchemaIdFileName(long schemaId) {
 		return ID_LINK_PREFIX + Long.toString(schemaId);
+	}
+
+	private SchemaDetails readIdLink(File subjectVersionFile) throws IOException {
+		Path idPath = Files.readSymbolicLink(subjectVersionFile.toPath());
+		String idName = idPath.toString();
+		if (!idName.startsWith(ID_LINK_PREFIX)) {
+			return null;
+		}
+		// get our id-name by removing the prefix from the link
+		idName = idName.substring(ID_LINK_PREFIX_LENGTH);
+
+		// try reading in the id file
+		try (FileReader reader = new FileReader(new File(idsDir, idName));) {
+			SchemaDetails details = gson.fromJson(reader, SchemaDetails.class);
+			return details;
+		} catch (FileNotFoundException fnfe) {
+			// might as well remove it if the id file doesn't exist
+			subjectVersionFile.delete();
+			return null;
+		}
 	}
 
 	/**

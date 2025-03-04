@@ -40,6 +40,7 @@ public class SchemaRegHandler extends AbstractHandler {
 	private static final Pattern POST_SUBJECT_CHECK_PATTERN = Pattern.compile("/subjects/([^/]+)");
 	private static final Pattern DELETE_SUBJECT_PATTERN = Pattern.compile("/subjects/([^/]+)");
 	private static final Pattern DELETE_SUBJECT_VERSION_PATTERN = Pattern.compile("/subjects/([^/]+)/versions/(\\d+)");
+	private static final String PERMANENT_PARAMETER = "permanent";
 
 	private final Gson gson = new Gson();
 
@@ -340,12 +341,18 @@ public class SchemaRegHandler extends AbstractHandler {
 		if (matcher.matches()) {
 			String subject = matcher.group(1);
 			long version = convertLong(response, "version", matcher.group(2));
+			boolean permanent = Boolean.parseBoolean(request.getParameter(PERMANENT_PARAMETER));
 			if (verbose) {
-				printMessage("Deleting subject '" + subject + "' version " + version);
+				printMessage("Deleting subject '" + subject + "', version " + version + ", permanent " + permanent);
 			}
-			persister.deleteSubjectVersion(subject, version);
-			// response is just a version number strangely
-			writeResponseObj(response, version);
+			SchemaDetails details = persister.deleteSubjectVersion(subject, version, permanent);
+			if (details == null) {
+				writeResponseObj(response, new ErrorResponse(HttpStatus.NOT_FOUND_404,
+						"subject '" + subject + "' version " + version + " not found"));
+			} else {
+				// response is just a version number strangely
+				writeResponseObj(response, version);
+			}
 			return;
 		}
 

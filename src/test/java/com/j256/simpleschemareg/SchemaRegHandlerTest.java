@@ -293,7 +293,7 @@ public class SchemaRegHandlerTest {
 		SchemaPersister persister = EasyMock.createMock(SchemaPersister.class);
 		SchemaRegHandler handler = new SchemaRegHandler(persister, null, true, false);
 
-		expect(baseRequest.getMethod()).andReturn("POST");
+		expect(baseRequest.getMethod()).andReturn("DELETE");
 		expect(request.getPathInfo()).andReturn("/unknown");
 
 		replay(persister, baseRequest, request, response);
