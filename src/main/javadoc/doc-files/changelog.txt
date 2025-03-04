@@ -1,5 +1,5 @@
 ### 0.4: ?/??/2025
-   * Added DELETE of subject/version.
+   * Added DELETE of subject/version with support for permanent parameter.
 
 ### 0.3: 2/26/2025
    * Added missing JSON fields to response for check upload "/subjects/..." request.

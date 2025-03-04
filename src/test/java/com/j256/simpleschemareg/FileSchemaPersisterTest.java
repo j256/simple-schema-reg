@@ -84,10 +84,10 @@ public class FileSchemaPersisterTest {
 		assertArrayEquals(new String[] { subject2, subject1 }, persister.lookupSubjects());
 
 		// save different schema to different subject
-		details = persister.saveSchema(subject2, schema1);
+		SchemaDetails details2 = persister.saveSchema(subject2, schema1);
 		assertNotNull(details);
-		assertEquals(1, details.getId());
-		assertEquals(2, details.getVersion());
+		assertEquals(1, details2.getId());
+		assertEquals(2, details2.getVersion());
 
 		/*
 		 * Now start a new one reading in the files from disk.
@@ -96,19 +96,36 @@ public class FileSchemaPersisterTest {
 		persister = new FileSchemaPersister(schemaRoot);
 		persister.initialize();
 
-		details = persister.saveSchema(subject2, schema1);
+		SchemaDetails details3 = persister.saveSchema(subject2, schema1);
 		assertNotNull(details);
-		assertEquals(1, details.getId());
-		assertEquals(2, details.getVersion());
+		assertEquals(1, details3.getId());
+		assertEquals(2, details3.getVersion());
 
 		assertNotNull(persister.lookupSubjectVersion(subject2, 1));
-		persister.deleteSubjectVersion(subject2, 1);
+		SchemaDetails results = persister.deleteSubjectVersion(subject2, 1, false);
+		assertEquals(details.getId(), results.getId());
+		assertEquals(details.getVersion(), results.getVersion());
 
 		assertNull(persister.lookupSubjectVersion(subject2, 1));
 		assertNotNull(persister.lookupSubjectVersion(subject2, 2));
 
 		assertArrayEquals(new long[] { 2 }, persister.deleteSubject(subject2));
 		assertNull(persister.lookupSubjectVersion(subject2, 2));
+
+		assertArrayEquals(new String[] { subject2, subject1 }, persister.lookupSubjects());
+
+		/*
+		 * Now start a new one reading in the files from disk.
+		 */
+
+		persister = new FileSchemaPersister(schemaRoot);
+		persister.initialize();
+
+		// now really blow it away
+		results = persister.deleteSubjectVersion(subject2, 1, true);
+		assertNotNull(results);
+		assertEquals(details.getId(), results.getId());
+		assertEquals(details.getVersion(), results.getVersion());
 
 		assertArrayEquals(new String[] { subject1 }, persister.lookupSubjects());
 	}
@@ -118,25 +135,52 @@ public class FileSchemaPersisterTest {
 		FileSchemaPersister persister = new FileSchemaPersister(schemaRoot);
 		persister.initialize();
 
-		String subject1 = "foo";
-		String schema1 = "weopjpjwepfowerf";
+		String subject = "foo";
+		String schema = "weopjpjwepfowerf";
 
-		SchemaDetails details = persister.saveSchema(subject1, schema1);
+		SchemaDetails details = persister.saveSchema(subject, schema);
 		assertNotNull(details);
-		assertEquals(schema1, details.getSchema());
+		assertEquals(schema, details.getSchema());
 		assertEquals(1, details.getId());
 		assertEquals(1, details.getVersion());
 
-		assertArrayEquals(new long[] { 1 }, persister.lookupSubjectVersions(subject1));
+		assertArrayEquals(new long[] { 1 }, persister.lookupSubjectVersions(subject));
 
 		persister.deleteSchemaId(1);
 
 		// dangling
-		assertArrayEquals(new long[] { 1 }, persister.lookupSubjectVersions(subject1));
+		assertArrayEquals(new long[] { 1 }, persister.lookupSubjectVersions(subject));
 
-		assertNull(persister.lookupSubjectVersion(subject1, 1));
+		assertNull(persister.lookupSubjectVersion(subject, 1));
 
-		assertArrayEquals(new long[] {}, persister.lookupSubjectVersions(subject1));
+		assertArrayEquals(new long[] {}, persister.lookupSubjectVersions(subject));
+	}
+
+	@Test
+	public void testSubjectVersionPermanent() throws IOException {
+		FileSchemaPersister persister = new FileSchemaPersister(schemaRoot);
+		persister.initialize();
+
+		String subject = "foo";
+		String schema = "weopjpjwepfowerf";
+
+		SchemaDetails details = persister.saveSchema(subject, schema);
+		assertNotNull(details);
+		assertEquals(schema, details.getSchema());
+		assertEquals(1, details.getId());
+		assertEquals(1, details.getVersion());
+
+		SchemaDetails details2 = persister.deleteSubjectVersion(subject, details.getVersion(), false);
+		assertEquals(details.getId(), details2.getId());
+
+		assertNull(persister.deleteSubjectVersion(subject, details.getVersion(), false));
+		assertNotNull(persister.lookupSchemaId(details.getId()));
+
+		details2 = persister.deleteSubjectVersion(subject, details.getVersion(), true);
+		assertNotNull(details2);
+		assertEquals(details.getId(), details2.getId());
+
+		assertNull(persister.lookupSchemaId(details.getId()));
 	}
 
 	private void deleteDir(File dir) {
