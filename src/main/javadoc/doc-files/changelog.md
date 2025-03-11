@@ -1,5 +1,6 @@
-### 0.4: ?/??/2025
+### 0.4: 3/11/2025
    * Added DELETE of subject/version with support for permanent parameter.
+   * Added HTTPD error codes that I mistakenly thought should not be returned.
 
 ### 0.3: 2/26/2025
    * Added missing JSON fields to response for check upload "/subjects/..." request.
