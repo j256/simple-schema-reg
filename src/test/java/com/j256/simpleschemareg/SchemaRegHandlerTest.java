@@ -46,6 +46,7 @@ public class SchemaRegHandlerTest {
 	@Test
 	public void testUnknownMethod() throws IOException {
 		expect(baseRequest.getMethod()).andReturn("UNKNOWN");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -58,6 +59,7 @@ public class SchemaRegHandlerTest {
 	@Test
 	public void testUnhandledMethod() throws IOException {
 		expect(baseRequest.getMethod()).andReturn("UPDATE");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -71,6 +73,7 @@ public class SchemaRegHandlerTest {
 	public void testUnknownGet() throws IOException {
 		expect(baseRequest.getMethod()).andReturn("GET");
 		expect(request.getPathInfo()).andReturn("/unknown");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -143,6 +146,7 @@ public class SchemaRegHandlerTest {
 
 		expect(baseRequest.getMethod()).andReturn("GET");
 		expect(request.getPathInfo()).andReturn("/schemas/ids/not-number");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -159,6 +163,7 @@ public class SchemaRegHandlerTest {
 		int schemaId = 100;
 		expect(request.getPathInfo()).andReturn("/schemas/ids/" + schemaId);
 		expect(persister.lookupSchemaId(schemaId)).andReturn(null);
+		response.setStatus(HttpStatus.NOT_FOUND_404);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -166,6 +171,21 @@ public class SchemaRegHandlerTest {
 
 		ErrorResponse errorResponse = gson.fromJson(stringOutput.toString(), ErrorResponse.class);
 		assertEquals(HttpStatus.NOT_FOUND_404, errorResponse.getErrorCode());
+	}
+
+	@Test
+	public void testGetSchemaIdsBadNumber() throws IOException {
+
+		expect(baseRequest.getMethod()).andReturn("GET");
+		expect(request.getPathInfo()).andReturn("/schemas/ids/not-number");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
+
+		replay(persister, baseRequest, request, response);
+		handler.handle("target", baseRequest, request, response);
+		verify(persister, baseRequest, request, response);
+
+		ErrorResponse errorResponse = gson.fromJson(stringOutput.toString(), ErrorResponse.class);
+		assertEquals(HttpStatus.BAD_REQUEST_400, errorResponse.getErrorCode());
 	}
 
 	@Test
@@ -193,6 +213,7 @@ public class SchemaRegHandlerTest {
 		int schemaId = 100;
 		expect(request.getPathInfo()).andReturn("/schemas/ids/" + schemaId + "/schema");
 		expect(persister.lookupSchemaId(schemaId)).andReturn(null);
+		response.setStatus(HttpStatus.NOT_FOUND_404);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -230,6 +251,7 @@ public class SchemaRegHandlerTest {
 		int version = 101;
 		expect(request.getPathInfo()).andReturn("/subjects/" + subject + "/versions/" + version);
 		expect(persister.lookupSubjectVersion(subject, version)).andReturn(null);
+		response.setStatus(HttpStatus.NOT_FOUND_404);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -263,6 +285,7 @@ public class SchemaRegHandlerTest {
 		String subject = "foo";
 		expect(request.getPathInfo()).andReturn("/subjects/" + subject + "/versions");
 		expect(persister.lookupSubjectVersions(subject)).andReturn(null);
+		response.setStatus(HttpStatus.NOT_FOUND_404);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -279,6 +302,7 @@ public class SchemaRegHandlerTest {
 
 		expect(baseRequest.getMethod()).andReturn("POST");
 		expect(request.getPathInfo()).andReturn("/unknown");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);
@@ -295,6 +319,7 @@ public class SchemaRegHandlerTest {
 
 		expect(baseRequest.getMethod()).andReturn("DELETE");
 		expect(request.getPathInfo()).andReturn("/unknown");
+		response.setStatus(HttpStatus.BAD_REQUEST_400);
 
 		replay(persister, baseRequest, request, response);
 		handler.handle("target", baseRequest, request, response);

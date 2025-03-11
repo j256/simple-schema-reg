@@ -43,7 +43,7 @@ Maven packages are published via [![Maven Central](https://maven-badges.herokuap
 <dependency>
 	<groupId>com.j256.simple-schema-reg</groupId>
 	<artifactId>simple-schema-reg</artifactId>
-	<version>0.3</version>
+	<version>0.4</version>
 </dependency>
 ```
 
